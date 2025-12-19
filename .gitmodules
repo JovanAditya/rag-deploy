@@ -1,0 +1,9 @@
+[submodule "rag-model"]
+	path = rag-model
+	url = https://github.com/JovanAditya/rag-model.git
+[submodule "rag-api"]
+	path = rag-api
+	url = https://github.com/JovanAditya/rag-api.git
+[submodule "rag-web"]
+	path = rag-web
+	url = https://github.com/JovanAditya/rag-web.git

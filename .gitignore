@@ -1,0 +1,14 @@
+# Ignore environment files
+.env
+
+# Data directories
+data/
+logs/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
