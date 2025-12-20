@@ -81,11 +81,14 @@ Gunakan opsi ini jika ingin mengembangkan kode (debugging).
     cd rag-api
     ```
 
-2.  Buat environment Python & install dependencies:
+2.  Buat environment Python menggunakan `environment.yml`:
     ```bash
-    conda create -n academic-rag python=3.10
+    # Install dari environment.yml (sudah include semua dependencies)
+    conda env create -f rag-model/environment.yml
     conda activate academic-rag
-    pip install -r requirements.txt
+    
+    # (Opsional) Install GPU support untuk PyTorch
+    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
     ```
 
 3.  Konfigurasi Environment:
