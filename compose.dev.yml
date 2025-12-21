@@ -42,6 +42,7 @@ services:
       - DATA_PATH=/app/data
       - CHROMA_DIR=/app/data/chroma_db
       - BM25_CACHE_DIR=/app/data/bm25_cache
+      - INDEX_CACHE_DIR=/app/data/cache
       # Security
       - API_SECRET_KEY=${API_SECRET_KEY}
     networks:
