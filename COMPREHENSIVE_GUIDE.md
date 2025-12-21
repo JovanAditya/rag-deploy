@@ -40,27 +40,27 @@ Cara termudah dan tercepat untuk menjalankan sistem.
     Buka `.env` dan atur:
     - `LLM_PROVIDER`: Pilih `gemini`, `openai`, atau `ollama`.
     - `GEMINI_API_KEY`: Jika pakai Gemini.
-    - `OLLAMA_BASE_URL`: Jika pakai Ollama Lokal (biasanya `http://host.docker.internal:11434`).
+    - `OLLAMA_BASE_URL`: Jika pakai Ollama (default: `http://ollama:11434` untuk Docker service).
     - `DB_PASSWORD`: Password database MySQL.
 
 3.  **Jalankan Sistem**
     ```bash
-    docker-compose up -d --build
+    docker compose up -d --build
     ```
 
 4.  **Generate App Key & Migrasi Database** (Hanya saat pertama kali)
     ```bash
     # Generate Key Laravel
-    docker-compose exec rag-web php artisan key:generate
+    docker compose exec rag-web php artisan key:generate
     
     # Jalankan Migrasi Database
-    docker-compose exec rag-web php artisan migrate
+    docker compose exec rag-web php artisan migrate --seed
     ```
 
 5.  **Akses Aplikasi**
-    - Web UI: http://localhost:8000
+    - Web UI: Sesuai konfigurasi Traefik (atau `http://localhost` jika expose port 80)
     - API Docs: http://localhost:5001/docs
-    - Username default: (Daftar manual via form login atau register)
+    - Login menggunakan **username** (NIM atau format `nama.user`) dan password sesuai seeder
 
 ---
 
@@ -108,8 +108,8 @@ Gunakan opsi ini jika ingin mengembangkan kode (debugging).
     **Opsi B: Development (Auto-Reload)**
     Jika ingin server restart otomatis saat coding:
     ```bash
-    # Wajib tentukan --port 5001 (karena default uvicorn 8000)
-    uvicorn api.main:app --reload --port 5001
+    # Set DATA_PATH agar dokumen terbaca dari rag-deploy/data
+    DATA_PATH=/path/to/rag-deploy/data uvicorn api.main:app --reload --port 5001
     ```
 
 ### Langkah 2: Setup Frontend (rag-web)

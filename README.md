@@ -17,8 +17,8 @@ rag-deploy/
 ├── rag-api/                # Submodule
 ├── rag-web/                # Submodule
 ├── data/                   # Shared data
-├── docker-compose.yml
-├── docker-compose.dev.yml
+├── compose.yml
+├── compose.dev.yml
 ├── .env.example
 └── README.md
 ```
@@ -29,6 +29,8 @@ Silakan baca **[COMPREHENSIVE_GUIDE.md](COMPREHENSIVE_GUIDE.md)** untuk instruks
 - Instalasi via Docker vs Manual
 - Konfigurasi Local LLM (Ollama, Qwen, Llama)
 - Fitur-fitur utama
+
+Untuk panduan Git Submodules, baca **[GIT_WORKFLOW_GUIDE.md](GIT_WORKFLOW_GUIDE.md)**.
 
 ## ⚙️ Quick Start (Docker)
 
@@ -42,7 +44,7 @@ cp .env.example .env
 # Edit .env: Pilih LLM_PROVIDER (gemini/ollama/dll) dan isi API Key
 
 # Start services
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ## 🔧 Konfigurasi
@@ -57,24 +59,25 @@ Supported LLMs:
 
 | Service | Port | Deskripsi |
 |---------|------|-----------|
-| rag-api | 5001 | REST API |
-| rag-web | 8000 | Laravel App |
-| mysql | 3306 | Database |
+| rag-api | 5001 | REST API (FastAPI) |
+| rag-web | 80   | Laravel App (via Traefik) |
+| mysql   | 3306 | Database |
+| ollama  | -    | LLM Service (internal only) |
 
 ## 📋 Perintah Docker
 
 ```bash
 # Start
-docker-compose up -d
+docker compose up -d
 
 # Stop
-docker-compose down
+docker compose down
 
 # Rebuild
-docker-compose up -d --build
+docker compose up -d --build
 
 # Logs
-docker-compose logs -f rag-api
+docker compose logs -f rag-api
 ```
 
 ## 🔗 Git Submodules

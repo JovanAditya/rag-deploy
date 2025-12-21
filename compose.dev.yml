@@ -1,0 +1,152 @@
+---
+services:
+  # RAG API Service (FastAPI Python)
+  rag-api:
+    build:
+      context: ./rag-api
+      dockerfile: Dockerfile
+    container_name: rag-api-dev
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - TZ=Asia/Jakarta
+      - HOST=0.0.0.0
+      - PORT=5001
+      - DEBUG=true
+      # LLM Providers
+      - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
+      - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.1}
+      - LLM_MAX_TOKENS=${LLM_MAX_TOKENS:-4000}
+      # API Keys
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL}
+      # Local LLMs (Ollama)
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
+      - QWEN_MODEL=${QWEN_MODEL}
+      - LLAMA_MODEL=${LLAMA_MODEL}
+      # RAG Config
+      - PIPELINE_TYPE=${PIPELINE_TYPE:-advanced}
+      - MAX_RESULTS=${MAX_RESULTS:-5}
+      - USE_RERANKING=${USE_RERANKING:-true}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-indobenchmark/indobert-base-p2}
+      # Internal Paths
+      - DATA_PATH=/app/data
+      - CHROMA_DIR=/app/data/chroma_db
+      - BM25_CACHE_DIR=/app/data/bm25_cache
+      # Security
+      - API_SECRET_KEY=${API_SECRET_KEY}
+    networks:
+      - backend
+      - frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rag-api.rule=Host(`rag-api.joppanaditya.my.id`)"
+      - "traefik.http.routers.rag-api.entrypoints=websecure"
+      - "traefik.http.routers.rag-api.tls.certresolver=cloudflare"
+      - "traefik.http.services.rag-api.loadbalancer.server.port=5001"
+      - "traefik.docker.network=frontend"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Laravel Web Application (PHP-FPM + Nginx)
+  rag-web:
+    build:
+      context: ./rag-web
+      dockerfile: Dockerfile
+    container_name: rag-web-dev
+    restart: unless-stopped
+    volumes:
+      - ./data:/var/www/data 
+    environment:
+      - TZ=Asia/Jakarta
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_URL=https://chat.joppanaditya.my.id
+      - RAG_API_URL=http://rag-api:5001/api
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=academic_rag
+      - DB_USERNAME=${DB_USERNAME:-raguser}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - APP_KEY=${APP_KEY}
+    depends_on:
+      - rag-api
+      - mysql
+    networks:
+      - frontend
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rag-web.rule=Host(`chat.joppanaditya.my.id`)"
+      - "traefik.http.routers.rag-web.entrypoints=websecure"
+      - "traefik.http.routers.rag-web.tls.certresolver=cloudflare"
+      - "traefik.http.services.rag-web.loadbalancer.server.port=80"
+      - "traefik.docker.network=frontend"
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: rag-mysql-dev
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=academic_rag
+      - MYSQL_USER=${DB_USERNAME:-raguser}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - mysql_data_dev:/var/lib/mysql
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    expose:
+      - "11434"
+    pull_policy: always
+    tty: true
+    volumes:
+      - ~/.ollama:/root/.ollama 
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_KEEP_ALIVE=24h
+    networks:
+      - backend
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+networks:
+  backend:
+    external: true
+  frontend:
+    external: true
+
+volumes:
+  mysql_data_dev:
+    driver: local
