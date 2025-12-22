@@ -33,11 +33,16 @@ services:
       - OLLAMA_MODEL=${OLLAMA_MODEL}
       - QWEN_MODEL=${QWEN_MODEL}
       - LLAMA_MODEL=${LLAMA_MODEL}
+      # OpenRouter
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL}
+      - OPENROUTER_BASE_URL=${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
       # RAG Config
       - PIPELINE_TYPE=${PIPELINE_TYPE:-advanced}
       - MAX_RESULTS=${MAX_RESULTS:-5}
       - USE_RERANKING=${USE_RERANKING:-true}
       - EMBEDDING_MODEL=${EMBEDDING_MODEL:-indobenchmark/indobert-base-p2}
+      - EMBEDDING_DEVICE=${EMBEDDING_DEVICE:-cpu}
       # Internal Paths
       - DATA_PATH=/app/data
       - CHROMA_DIR=/app/data/chroma_db
