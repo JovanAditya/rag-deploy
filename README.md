@@ -27,7 +27,7 @@ rag-deploy/
 
 Silakan baca **[COMPREHENSIVE_GUIDE.md](COMPREHENSIVE_GUIDE.md)** untuk instruksi detail mengenai:
 - Instalasi via Docker vs Manual
-- Konfigurasi Local LLM (Ollama, Qwen, Llama)
+- Konfigurasi Local LLM via Ollama
 - Fitur-fitur utama
 
 Untuk panduan Git Submodules, baca **[GIT_WORKFLOW_GUIDE.md](GIT_WORKFLOW_GUIDE.md)**.
@@ -52,8 +52,8 @@ docker compose up -d --build
 Edit file `.env` di root folder ini. File ini mengontrol seluruh konfigurasi stack (Frontend + Backend + Database).
 
 Supported LLMs:
-- **Cloud**: Gemini, OpenAI, Anthropic
-- **Local**: Ollama (Llama 3, Qwen, Mistral, dll)
+- **Cloud**: Gemini (Rekomendasi via Google AI Studio)
+- **Local**: Ollama (Contoh: Llama 3.2 Lokal)
 
 ## 🐳 Services
 
