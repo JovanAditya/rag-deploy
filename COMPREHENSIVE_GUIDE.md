@@ -38,7 +38,7 @@ Cara termudah dan tercepat untuk menjalankan sistem.
     cp .env.example .env
     ```
     Buka `.env` dan atur:
-    - `LLM_PROVIDER`: Pilih `gemini`, `openai`, atau `ollama`.
+    - `LLM_PROVIDER`: Pilih `gemini` (cloud) atau `ollama` (lokal).
     - `GEMINI_API_KEY`: Jika pakai Gemini.
     - `OLLAMA_BASE_URL`: Jika pakai Ollama (default: `http://ollama:11434` untuk Docker service).
     - `DB_PASSWORD`: Password database MySQL.
@@ -153,15 +153,14 @@ Gunakan opsi ini jika ingin mengembangkan kode (debugging).
     ```env
     LLM_PROVIDER=gemini
     GEMINI_API_KEY=AIzaSy...
-    GEMINI_MODEL=gemini-2.0-flash
+    GEMINI_MODEL=gemini-2.5-flash
     ```
 
 ### Menggunakan Ollama (Lokal)
 1.  Install [Ollama](https://ollama.ai).
-2.  Pull model, misal Llama 3 atau Qwen:
+2.  Pull model, contoh:
     ```bash
     ollama pull llama3.2:latest
-    ollama pull qwen3:8b
     ```
 3.  Jalankan Ollama Server: `ollama serve`.
 4.  Set `.env`:

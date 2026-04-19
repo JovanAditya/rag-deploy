@@ -21,23 +21,12 @@ services:
       - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
       - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.1}
       - LLM_MAX_TOKENS=${LLM_MAX_TOKENS:-4000}
-      # API Keys & Strings
+      # Gemini API
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GEMINI_MODEL=${GEMINI_MODEL}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - OPENAI_MODEL=${OPENAI_MODEL}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL}
-      # Local LLMs (Ollama)
-      # Gunakan host.docker.internal untuk akses localhost host dari container
+      # Ollama (Local LLM)
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       - OLLAMA_MODEL=${OLLAMA_MODEL}
-      - QWEN_MODEL=${QWEN_MODEL}
-      - LLAMA_MODEL=${LLAMA_MODEL}
-      # OpenRouter
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - OPENROUTER_MODEL=${OPENROUTER_MODEL}
-      - OPENROUTER_BASE_URL=${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
       # RAG Config
       - PIPELINE_TYPE=${PIPELINE_TYPE:-advanced}
       - MAX_RESULTS=${MAX_RESULTS:-5}
@@ -80,6 +69,8 @@ services:
       - DB_USERNAME=${DB_USERNAME:-raguser}
       - DB_PASSWORD=${DB_PASSWORD}
       - APP_KEY=${APP_KEY}
+    volumes:
+      - ./data:/var/www/data
     depends_on:
       - rag-api
       - mysql
