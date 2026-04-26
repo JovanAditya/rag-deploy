@@ -1,74 +1,60 @@
----
 services:
-  # RAG API Service
+  # 1. Reverse Proxy (Nginx)
+  nginx-proxy:
+    image: nginx:stable-alpine
+    container_name: rag-nginx-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      - API_SECRET_KEY=${API_SECRET_KEY}
+      - APP_URL=${APP_URL}
+      - API_URL=${API_URL}
+    volumes:
+      - ./docker/nginx.prod.conf:/tmp/default.conf:ro
+    command: /bin/sh -c "cp /tmp/default.conf /etc/nginx/conf.d/default.conf && export APP_DOMAIN=$$(echo $$APP_URL | sed -e 's|^[^/]*//||' -e 's|/.*||') && export API_DOMAIN=$$(echo $$API_URL | sed -e 's|^[^/]*//||' -e 's|/.*||') && sed -i 's/__API_SECRET_KEY__/'\"$$API_SECRET_KEY\"'/g' /etc/nginx/conf.d/default.conf && sed -i 's/__APP_URL__/'\"$$APP_DOMAIN\"'/g' /etc/nginx/conf.d/default.conf && sed -i 's/__API_URL__/'\"$$API_DOMAIN\"'/g' /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+    networks:
+      - frontend
+      - backend
+
+  # 2. RAG API (FastAPI)
   rag-api:
-    image: rag-api:latest
     build:
       context: ./rag-api
       dockerfile: Dockerfile
-    container_name: rag-api
+    container_name: rag-api-prod
     restart: unless-stopped
-    ports:
-      - "${API_PORT:-5001}:5001"
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL}
+      - EMBEDDING_DEVICE=cpu
+      - CHROMA_PERSIST_DIRECTORY=/app/data/chroma_db
+      - INDEX_CACHE_DIR=/app/data/cache
+      - BM25_CACHE_DIR=/app/data/bm25_cache
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
-    environment:
-      - HOST=0.0.0.0
-      - PORT=5001
-      - DEBUG=${DEBUG:-false}
-      # LLM Providers
-      - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
-      - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.1}
-      - LLM_MAX_TOKENS=${LLM_MAX_TOKENS:-4000}
-      # Gemini API
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - GEMINI_MODEL=${GEMINI_MODEL}
-      # Ollama (Local LLM)
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-      - OLLAMA_MODEL=${OLLAMA_MODEL}
-      # RAG Config
-      - PIPELINE_TYPE=${PIPELINE_TYPE:-advanced}
-      - MAX_RESULTS=${MAX_RESULTS:-5}
-      - USE_RERANKING=${USE_RERANKING:-true}
-      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-indobenchmark/indobert-base-p2}
-      - EMBEDDING_DEVICE=${EMBEDDING_DEVICE:-cpu}
-      # Internal Paths
-      - DATA_PATH=/app/data
-      - CHROMA_DIR=/app/data/chroma_db
-      - BM25_CACHE_DIR=/app/data/bm25_cache
-      # Security
-      - API_SECRET_KEY=${API_SECRET_KEY}
     networks:
       - backend
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
-  # Laravel Web Application
+  # 3. Laravel Web Application
   rag-web:
-    image: rag-web:latest
     build:
       context: ./rag-web
       dockerfile: Dockerfile
-    container_name: rag-web
+    container_name: rag-web-prod
     restart: unless-stopped
-    ports:
-      - "${WEB_PORT:-8000}:80"
     environment:
-      - APP_ENV=production
-      - APP_DEBUG=false
-      - APP_URL=${APP_URL:-http://localhost:8000}
-      - RAG_API_URL=http://rag-api:5001/api
-      - DB_CONNECTION=mysql
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_DATABASE=academic_rag
-      - DB_USERNAME=${DB_USERNAME:-raguser}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - APP_ENV=${APP_ENV}
+      - APP_DEBUG=${APP_DEBUG}
+      - APP_URL=${APP_URL}
       - APP_KEY=${APP_KEY}
+      - DB_HOST=mysql
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - RAG_API_URL=http://rag-api:5001/v1
     volumes:
       - ./data:/var/www/data
     depends_on:
@@ -78,34 +64,29 @@ services:
       - frontend
       - backend
 
-  # MySQL Database
+  # 4. MySQL Database
   mysql:
     image: mysql:8.0
-    container_name: rag-mysql
+    container_name: rag-mysql-prod
     restart: unless-stopped
+    ports:
+      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=academic_rag
-      - MYSQL_USER=${DB_USERNAME:-raguser}
+      - MYSQL_USER=${DB_USERNAME}
       - MYSQL_PASSWORD=${DB_PASSWORD}
     volumes:
-      - mysql_data:/var/lib/mysql
-    ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - mysql_prod_data:/var/lib/mysql
     networks:
       - backend
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
 networks:
-  backend:
-    external: true
   frontend:
+    external: true
+  backend:
     external: true
 
 volumes:
-  mysql_data:
+  mysql_prod_data:
     driver: local
