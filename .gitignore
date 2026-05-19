@@ -15,3 +15,8 @@ Thumbs.db
 
 # Evaluation directories
 rag-evaluation/
+
+# Log files
+*.log
+pipeline.log
+
